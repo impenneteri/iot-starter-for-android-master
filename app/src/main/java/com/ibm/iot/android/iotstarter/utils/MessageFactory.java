@@ -64,11 +64,29 @@ public class MessageFactory {
                 "} }";
     }
 
+
+
     public static String getTextMessage(String text, String deviceId, int count) {
         return "{\"d\":{" +
                 "\"text\":\"" + text + "\"," +
                 "\"deviceId\":\"" + deviceId + "\"," +
                 "\"appCount\":" + count +
+                " } }";
+    }
+
+    public static String getTextMessage(String text, String scanValue, String fromDeviceId, String toDeviceId) {
+        return "{\"d\":{" +
+                "\"text\":\"" + text + "\"," +
+                "\"scanValue\":\"" + scanValue + "\"," +
+                "\"fromDeviceId\":\"" + fromDeviceId + "\"," +
+                "\"toDeviceId\":\"" + toDeviceId + "\"" +
+                " } }";
+    }
+
+    public static String getTextMessage(int deviceId, String scanValue) {
+        return "{\"d\":{" +
+                "\"ScannerId\":\"" + deviceId + "\"," +
+                "\"Data\":\"" + scanValue + "\"" +
                 " } }";
     }
 

@@ -17,7 +17,9 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.ibm.iot.android.iotstarter.IoTStarterApplication;
@@ -35,7 +37,7 @@ import org.w3c.dom.Text;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link BtoothScannerFragment.OnFragmentInteractionListener} interface
+ * { BtoothScannerFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
  * Use the {@link BtoothScannerFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -45,7 +47,12 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
 
     // TODO: Rename and change types of parameters
     TextView txtScan;
+    TextView txtScannerId;
     Button btnScan;
+    CheckBox chkboxAlarm;
+    Spinner spinnerDeviceId;
+
+    private boolean isSetAlarm = false;
     private int counter = 1;
     //private OnFragmentInteractionListener mListener;
 
@@ -220,7 +227,19 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
         String receivedString = this.getString(R.string.messages_received);
         receivedString = receivedString.replace("0",Integer.toString(app.getReceiveCount()));
         String receivedMsgString = app.getMsgString();
-        ((TextView) getActivity().findViewById(R.id.txtView_Message)).setText(receivedMsgString);
+
+        if(receivedMsgString != null) {
+            if (receivedMsgString.contains("alarm")) {
+                String receivedMsgScanValue = app.getScanValue();
+                String receivedMsgToDeviceId = app.getToDeviceId();
+                String currentDeviceId = app.getDeviceId();
+                if (receivedMsgToDeviceId.equals(currentDeviceId)) {
+                    ((TextView) getActivity().findViewById(R.id.txtView_Message)).setText(receivedMsgScanValue);
+                }
+            } else {
+                ((TextView) getActivity().findViewById(R.id.txtView_Message)).setText(receivedMsgString);
+            }
+        }
         //((TextView) getActivity().findViewById(R.id.messagesReceivedView)).setText(receivedString);
     }
 
@@ -241,6 +260,20 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
 
         btnScan = (Button) getActivity().findViewById(R.id.btnSendNodeRed);
         txtScan = (EditText) getActivity().findViewById(R.id.editTextScannedVal);
+        chkboxAlarm = (CheckBox) getActivity().findViewById(R.id.checkBoxAlarm);
+        spinnerDeviceId = (Spinner) getActivity().findViewById(R.id.spinnerDeviceIDs);
+        //spinnerDeviceId.setEnabled(false);
+        chkboxAlarm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(chkboxAlarm.isChecked()){
+                    spinnerDeviceId.setEnabled(true);
+                }
+                else{
+                    spinnerDeviceId.setEnabled(false);
+                }
+            }
+        });
         txtScan.setOnKeyListener(new View.OnKeyListener(){
              @Override
              public boolean onKey(View v, int keyCode, KeyEvent event){
@@ -268,25 +301,42 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
 
     private void handleSendText(){
         Log.d(TAG, ".handleSendText() entered");
+        if(chkboxAlarm.isChecked() == true){
+            isSetAlarm = true;
+        }
+        else{
+            isSetAlarm = false;
+        }
         if(app.getConnectionType() != Constants.ConnectionType.QUICKSTART){
             counter = app.getMsgCount();
-            String scanValue = txtScan.getText().toString();
+            String msgToSend = "";
             String devId = app.getDeviceId();
-            String messageData = MessageFactory.getTextMessage(scanValue, devId, counter);
+            String messageData = "";
+            msgToSend = txtScan.getText().toString();
+            if(isSetAlarm == true){
+                String toDeviceId = String.valueOf(spinnerDeviceId.getSelectedItem());
+                messageData = MessageFactory.getTextMessage("alarm", msgToSend, devId, toDeviceId);
+            }
+            else{
+                messageData = MessageFactory.getTextMessage(Integer.valueOf(devId), msgToSend);
+            }
+
             try{
                 MyIoTActionListener listener = new MyIoTActionListener(context, Constants.ActionStateStatus.PUBLISH);
                 IoTClient ioTClient = IoTClient.getInstance(context);
-                ioTClient.publishEvent(Constants.TEXT_EVENT, "json", messageData,0,false,listener);
+
+                ioTClient.publishEvent(Constants.TEXT_EVENT,  "json", messageData,2,false,listener);
+                //
 
                 int count = app.getPublishCount();
                 app.setPublishCount(++count);
 
-                String runningActivity = app.getCurrentRunningActivity();
-                if(runningActivity != null && runningActivity.equals(IoTPagerFragment.class.getName())){
+                //String runningActivity = app.getCurrentRunningActivity();
+                //if(runningActivity != null && runningActivity.equals(IoTPagerFragment.class.getName())){
                     Intent actionIntent = new Intent(Constants.APP_ID + Constants.INTENT_IOT);
                     actionIntent.putExtra(Constants.INTENT_DATA,Constants.INTENT_DATA_PUBLISHED);
                     context.sendBroadcast(actionIntent);
-                }
+                //}
             }
             catch (MqttException e){
 

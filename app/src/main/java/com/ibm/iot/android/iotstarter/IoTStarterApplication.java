@@ -73,6 +73,8 @@ public class IoTStarterApplication extends Application {
 
     private int color = Color.argb(1, 58, 74, 83);
     private String msgString;
+    private String toDeviceId;
+    private String scanValue;
     private boolean isCameraOn = false;
     private float[] accelData;
     private boolean accelEnabled = true;
@@ -372,6 +374,12 @@ public class IoTStarterApplication extends Application {
     // Getters and Setters
     public int getMsgCount() { return msgCount; }
     public void setMsgCount(int count) { this.msgCount = count; }
+
+    public String getScanValue() { return scanValue; }
+    public void setScanValue(String _scanValue){ this.scanValue = _scanValue; }
+
+    public String getToDeviceId() { return toDeviceId; }
+    public void setToDeviceId(String _deviceId) { this.toDeviceId = _deviceId; }
 
     public String getCurrentRunningActivity() { return currentRunningActivity; }
 

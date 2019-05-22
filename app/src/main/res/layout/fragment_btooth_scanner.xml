@@ -42,7 +42,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="start
+"
         android:text="@string/hello_blank_fragment"
         android:textColor="@color/black" />
     <EditText
@@ -59,6 +60,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Send Command" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:text="@string/lblDeviceID_select"
+        android:textColor="@color/black"
+        android:visibility="gone" />
+
+    <Spinner
+        android:id="@+id/spinnerDeviceIDs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:entries="@array/deviceID_arrays"
+        android:prompt="@string/deviceID_prompt"
+        android:visibility="gone" />
+
+    <CheckBox
+        android:id="@+id/checkBoxAlarm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Use Alarm Status"
+        android:visibility="gone" />
 
     <TextView
         android:layout_width="wrap_content"

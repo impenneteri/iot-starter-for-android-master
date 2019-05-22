@@ -120,8 +120,16 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Scanned value:</string>
+    <string name="lbl_scannerId">Scanner ID:</string>
     <string name="lbl_status_message">Status Message</string>
     <string name="scannedval_hint">scanned barcode value goes here</string>
+
+    <string name="deviceID_prompt">Choose a Device ID</string>
+    <string name="lblDeviceID_select">Select a Device ID to send alarm:</string>
+    <string-array name="deviceID_arrays">
+        <item>112233445566</item>
+        <item>1122334466</item>
+    </string-array>
     <!--string name="tutorial_pageC2_text">Step 1: Enter your IoT organization ID\nStep 2: Enter your device ID\nStep 3: Enter your Authorization Token</string-->
     <!-- End Tutorial Strings -->
 </resources>

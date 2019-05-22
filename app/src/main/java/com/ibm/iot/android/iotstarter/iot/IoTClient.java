@@ -17,6 +17,9 @@ package com.ibm.iot.android.iotstarter.iot;
 
 import android.content.Context;
 import android.util.Log;
+
+import com.ibm.iot.android.iotstarter.utils.Constants;
+
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.*;
 
@@ -136,6 +139,7 @@ public class IoTClient {
             try {
                 // connect
                 return client.connect(options, context, listener);
+
             } catch (MqttException e) {
                 Log.e(TAG, "Exception caught while attempting to connect to server", e.getCause());
                 throw e;
@@ -294,7 +298,7 @@ public class IoTClient {
      *
      * @throws MqttException
      */
-    private IMqttToken subscribe(String topic, int qos, Object userContext, IMqttActionListener listener) throws MqttException {
+    public IMqttToken subscribe(String topic, int qos, Object userContext, IMqttActionListener listener) throws MqttException {
         Log.d(TAG, ".subscribe() entered");
         if (isMqttConnected()) {
             try {

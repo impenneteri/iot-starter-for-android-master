@@ -275,6 +275,8 @@ public class LoginPagerFragment extends IoTStarterPagerFragment {
                     //start connection - if this method returns, connection has not yet happened
                     iotClient.connectDevice(app.getMyIoTCallbacks(), listener, factory);
 
+                    MyIoTActionListener listenSubscribe =  new MyIoTActionListener(context, Constants.ActionStateStatus.SUBSCRIBE);
+                    iotClient.subscribeToCommand(Constants.TEXT_EVENT, "json", 2, context, listenSubscribe);
                 } catch (MqttException e) {
                     if (e.getReasonCode() == (Constants.ERROR_BROKER_UNAVAILABLE)) {
                         // error while connecting to the broker - send an intent to inform the user
@@ -377,7 +379,7 @@ public class LoginPagerFragment extends IoTStarterPagerFragment {
             app.setDeviceSensor(DeviceSensor.getInstance(context));
             //app.getDeviceSensor().enableSensor();
 
-            //app.getDeviceSensor().enableIntervalSendMessage();
+           // app.getDeviceSensor().enableIntervalSendMessage();
         }
     }
 

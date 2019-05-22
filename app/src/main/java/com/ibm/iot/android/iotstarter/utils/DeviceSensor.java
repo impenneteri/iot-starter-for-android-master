@@ -161,7 +161,7 @@ public class DeviceSensor implements SensorEventListener {
         public void run(){
             Log.v(TAG, "SendTimerMessageTask.run() entered");
 
-            String messageData = MessageFactory.getTextMessage("none");
+            String messageData = MessageFactory.getTextMessage("listening");
 
             try {
                 // create ActionListener to handle message published results
@@ -170,7 +170,10 @@ public class DeviceSensor implements SensorEventListener {
                 if (app.getConnectionType() == Constants.ConnectionType.QUICKSTART) {
                     iotClient.publishEvent(Constants.STATUS_EVENT, "json", messageData, 0, false, listener);
                 } else {
-                    iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
+
+                    //iotClient.subscribe(Constants.TEXT_EVENT, 2, context,listener);
+                    //iotClient.subscribeToCommand(Constants.TEXT_EVENT, "json", 1, context, listener);
+                   // iotClient.publishEvent(Constants.TEXT_EVENT, "json", messageData, 0, false, listener);
                 }
 
                 //int count = app.getPublishCount();
