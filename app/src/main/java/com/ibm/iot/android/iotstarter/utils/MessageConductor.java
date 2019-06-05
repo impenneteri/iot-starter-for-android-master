@@ -29,7 +29,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Steer incoming MQTT messages to the proper activities based on their content.
@@ -210,11 +214,79 @@ public class MessageConductor {
         else{
             if (topic.contains(Constants.TEXT_EVENT)) {
                 int unreadCount = app.getUnreadCount();
-                String messageText = top.getString("Data");
-                if (messageText.trim().length() == 0) {
-                    return;
+//                String messageText = top.getString("Data");
+//                if (messageText.trim().length() == 0) {
+//                    return;
+//                }
+
+                //app.setMsgString(messageText);
+                //if (topic.equals("scanReceived")) {
+                JSONObject _topc = new JSONObject(payload);
+                String msgData = "";
+
+                try {
+                    String backError = _topc.getString("BackError");
+                    String backMsg = _topc.getString("BackMessage");
+                    String frontMsg = _topc.getString("FrontMessage");
+                    String frontError = _topc.getString("FrontError");
+                    String scanType = _topc.getString("ScanType");
+
+                    if (scanType.equals("BACK")) {
+                        if (backError.length() > 0) {
+                            msgData = backError;
+                        } else {
+                            msgData = backMsg;
+                        }
+                    }
+                    if(scanType.equals("FRONT")) {
+                        if (frontError.length() > 0) {
+                            msgData = frontError;
+                        } else {
+                            msgData = frontMsg;
+                        }
+                    }
+                } catch (JSONException ex) {
+                    msgData = top.getString("Data");
+
                 }
-                app.setMsgString(messageText);
+                //msgData = top.getString("Data");
+                //msgData.matches("^[0-9]*[0-9]-*[0-9]*[0-9]")
+                Pattern p = Pattern.compile("[0-9]*[0-9]-*[0-9]*[0-9]");
+                Matcher m = p.matcher(msgData);
+                List<String> binValue = new ArrayList<String>();
+                String newSpeakingBinValue = "";
+                String updatedMsgData = "";
+                int counter = 0;
+                while (m.find()) {
+                    binValue.add(m.group(0));
+                    newSpeakingBinValue = binValue.get(counter).replace("-", "dash");
+                    if (counter == 0) {
+                        updatedMsgData = msgData.replace(binValue.get(counter), newSpeakingBinValue);
+                    } else {
+                        updatedMsgData = updatedMsgData.replace(binValue.get(counter), newSpeakingBinValue);
+                    }
+                    counter++;
+                }
+
+                app.setMsgString(msgData);
+
+                if (updatedMsgData.length() > 0) {
+                    if(updatedMsgData.contains("INTO") && !updatedMsgData.contains("TRASHCAN")){
+                        String getBIN = updatedMsgData.substring(updatedMsgData.indexOf("INTO") + 5, updatedMsgData.indexOf("&&") - 1 );
+                        String revisedMessage = "PUT ITEM INTO " + getBIN;
+                        updatedMsgData = revisedMessage;
+                    }
+                    if(updatedMsgData.contains("INTO") && updatedMsgData.contains("TRASHCAN")){
+                        updatedMsgData = "PUT ITEM INTO TRASHCAN";
+                    }
+                    app.setSpeakMsgString(updatedMsgData);
+                    //speakWords(updatedMsgData);
+                } else {
+                    //speakWords(msgData);
+                    app.setSpeakMsgString(msgData);
+                }
+
+                //dataReceived.setText(mqttMessage.toString());
 
                 // Send intent to LOG fragment to mark list data invalidated
                 String runningActivity = app.getCurrentRunningActivity();
@@ -240,11 +312,14 @@ public class MessageConductor {
                     return;
                 }
 
-                if (messageText != null) {
+                if (msgData != null) {
                     unreadIntent.putExtra(Constants.INTENT_DATA, Constants.UNREAD_EVENT);
                     context.sendBroadcast(unreadIntent);
                 }
+                //}
             }
         }
     }
+
+
 }

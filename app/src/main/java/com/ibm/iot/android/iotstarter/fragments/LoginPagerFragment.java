@@ -135,14 +135,26 @@ public class LoginPagerFragment extends IoTStarterPagerFragment {
         if (app.getOrganization() != null) {
             ((EditText) getActivity().findViewById(R.id.organizationValue)).setText(app.getOrganization());
         }
+        else{
+            // TEST CODE
+            ((EditText) getActivity().findViewById(R.id.organizationValue)).setText("0ahd4j");
+        }
 
         // DeviceId should never be null at this point.
         if (app.getDeviceId() != null) {
             ((EditText) getActivity().findViewById(R.id.deviceIDValue)).setText(app.getDeviceId());
         }
+        else{
+            // TEST CODE
+            ((EditText) getActivity().findViewById(R.id.deviceIDValue)).setText("1");
+        }
 
         if (app.getAuthToken() != null) {
             ((EditText) getActivity().findViewById(R.id.authTokenValue)).setText(app.getAuthToken());
+        }
+        else{
+            // TEST CODE
+            ((EditText) getActivity().findViewById(R.id.authTokenValue)).setText("aUtoMatiq200!");
         }
 
         // Set 'Connected to IoT' to Yes if MQTT client is connected. Leave as No otherwise.

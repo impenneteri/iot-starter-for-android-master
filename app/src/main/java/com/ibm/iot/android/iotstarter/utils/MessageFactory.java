@@ -85,7 +85,7 @@ public class MessageFactory {
 
     public static String getTextMessage(int deviceId, String scanValue) {
         return "{\"d\":{" +
-                "\"ScannerId\":\"" + deviceId + "\"," +
+                "\"ScannerId\":" + deviceId + "," +
                 "\"Data\":\"" + scanValue + "\"" +
                 " } }";
     }

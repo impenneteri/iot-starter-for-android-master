@@ -130,6 +130,8 @@ public class IoTClient {
             options.setCleanSession(true);
             options.setUserName(username);
             options.setPassword(password);
+            options.setConnectionTimeout(3600);
+            options.setAutomaticReconnect(true);
 
             if (factory != null && !this.getOrganization().equals("quickstart")) {
                 options.setSocketFactory(factory);

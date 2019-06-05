@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -21,6 +23,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ibm.iot.android.iotstarter.IoTStarterApplication;
 import com.ibm.iot.android.iotstarter.R;
@@ -34,6 +37,10 @@ import com.ibm.iot.android.iotstarter.views.DrawingView;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.w3c.dom.Text;
 
+import java.util.Locale;
+
+import static android.content.Context.MODE_PRIVATE;
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
@@ -42,18 +49,25 @@ import org.w3c.dom.Text;
  * Use the {@link BtoothScannerFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BtoothScannerFragment extends IoTStarterPagerFragment {
+public class BtoothScannerFragment extends IoTStarterPagerFragment implements TextToSpeech.OnInitListener {
     private final static String TAG = BtoothScannerFragment.class.getName();
 
     // TODO: Rename and change types of parameters
     TextView txtScan;
     TextView txtScannerId;
     Button btnScan;
+    Button btnGetPrevMsg;
+    Button btnGetCurrentMsg;
     CheckBox chkboxAlarm;
     Spinner spinnerDeviceId;
 
     private boolean isSetAlarm = false;
     private int counter = 1;
+    private int messageCounter = 0;
+    private String prevMessage = "";
+
+    private int MY_DATA_CHECK_CODE = 0;
+    private TextToSpeech myTTS;
     //private OnFragmentInteractionListener mListener;
 
     public BtoothScannerFragment() {
@@ -71,14 +85,23 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
         return fragment;
     }
 
-    /*@Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
+
+        Intent checkTTSIntent = new Intent();
+        checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(checkTTSIntent, MY_DATA_CHECK_CODE);
+
+
+
         super.onCreate(savedInstanceState);
+
 //        if (getArguments() != null) {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
 //        }
-    }*/
+
+    }
 
     /*@Override
     public void onResume(){
@@ -142,10 +165,14 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
             };
         }
 
+
+
         getActivity().getApplicationContext().registerReceiver(broadcastReceiver,
                 new IntentFilter(Constants.APP_ID + Constants.INTENT_IOT));
 
         initializeBtoothScannerActivity();
+
+
     }
 
     @Override
@@ -177,7 +204,11 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
             ((TextView) getActivity().findViewById(R.id.txtView_Message)).setText("");
         }
 
-        processReceiveIntent();
+        //
+        if(messageCounter == 0){
+            processReceiveIntent();
+            messageCounter++;
+        }
     }
 
     private void processIntent(Intent intent){
@@ -238,6 +269,18 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
                 }
             } else {
                 ((TextView) getActivity().findViewById(R.id.txtView_Message)).setText(receivedMsgString);
+                if(receivedMsgString.length()> 0) {
+                    if(messageCounter == 0){
+                        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("MyPref", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("prevMessage",app.getSpeakMsgString());
+                        editor.commit();
+                        messageCounter++;
+                    }
+                    else {
+                        speakWords(app.getSpeakMsgString());
+                    }
+                }
             }
         }
         //((TextView) getActivity().findViewById(R.id.messagesReceivedView)).setText(receivedString);
@@ -259,9 +302,12 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
         updateViewStrings();
 
         btnScan = (Button) getActivity().findViewById(R.id.btnSendNodeRed);
+        btnGetPrevMsg = (Button) getActivity().findViewById(R.id.btnGetPrevMsg);
+        btnGetCurrentMsg = (Button) getActivity().findViewById(R.id.btnGetCurrentMsg);
         txtScan = (EditText) getActivity().findViewById(R.id.editTextScannedVal);
         chkboxAlarm = (CheckBox) getActivity().findViewById(R.id.checkBoxAlarm);
         spinnerDeviceId = (Spinner) getActivity().findViewById(R.id.spinnerDeviceIDs);
+
         //spinnerDeviceId.setEnabled(false);
         chkboxAlarm.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -277,7 +323,7 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
         txtScan.setOnKeyListener(new View.OnKeyListener(){
              @Override
              public boolean onKey(View v, int keyCode, KeyEvent event){
-                  if(keyCode == KeyEvent.KEYCODE_ENTER){
+                  if(keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN){
                       handleSendText();
                       txtScan.setText("");
                       return true;
@@ -290,6 +336,26 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
             public void onClick(View v){
                 handleSendText();
                 txtScan.setText("");
+            }
+        });
+        btnGetPrevMsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("MyPref", MODE_PRIVATE);
+                String pref_prevMsg = sharedPreferences.getString("prevMessage", null);
+                if(pref_prevMsg != null){
+                    prevMessage = pref_prevMsg;
+                    speakWords(prevMessage);
+                }
+                else{
+                    speakWords("No previous message");
+                }
+            }
+        });
+        btnGetCurrentMsg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                speakWords(app.getSpeakMsgString());
             }
         });
 
@@ -313,6 +379,8 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
             String devId = app.getDeviceId();
             String messageData = "";
             msgToSend = txtScan.getText().toString();
+            msgToSend = msgToSend.replace("\\n", "");
+            msgToSend = msgToSend.replace("\\r", "");
             if(isSetAlarm == true){
                 String toDeviceId = String.valueOf(spinnerDeviceId.getSelectedItem());
                 messageData = MessageFactory.getTextMessage("alarm", msgToSend, devId, toDeviceId);
@@ -327,7 +395,7 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
 
                 ioTClient.publishEvent(Constants.TEXT_EVENT,  "json", messageData,2,false,listener);
                 //
-
+                messageCounter = 0;
                 int count = app.getPublishCount();
                 app.setPublishCount(++count);
 
@@ -346,6 +414,29 @@ public class BtoothScannerFragment extends IoTStarterPagerFragment {
 
     public int getCounter() { return counter; }
 
+    private void speakWords(String speech){
+        myTTS.speak(speech, TextToSpeech.QUEUE_FLUSH, null, null);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        if(requestCode == MY_DATA_CHECK_CODE){
+            myTTS = new TextToSpeech(context, this);
+        }
+        else{
+            Intent installTTSIntent = new Intent();
+            installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+            startActivity(installTTSIntent);
+        }
+    }
+
+    public void onInit(int initStatus){
+        if(initStatus == TextToSpeech.SUCCESS){
+            myTTS.setLanguage(Locale.US);
+        }
+        else if (initStatus == TextToSpeech.ERROR) {
+            Toast.makeText(context, "Sorry! Text To Speech failed...", Toast.LENGTH_LONG).show();
+        }
+    }
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated

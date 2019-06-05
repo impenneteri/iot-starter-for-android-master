@@ -73,6 +73,7 @@ public class IoTStarterApplication extends Application {
 
     private int color = Color.argb(1, 58, 74, 83);
     private String msgString;
+    private String speakMsgString;
     private String toDeviceId;
     private String scanValue;
     private boolean isCameraOn = false;
@@ -432,6 +433,10 @@ public class IoTStarterApplication extends Application {
     public void setMsgString(String _msg){
         this.msgString = _msg;
     }
+
+    public String getSpeakMsgString() { return speakMsgString; }
+
+    public void setSpeakMsgString(String _msg) { this.speakMsgString = _msg; }
 
     public int getPublishCount() {
         return publishCount;
